@@ -1,7 +1,7 @@
 # Steam Games Data Analysis
-Name: Thomas Seggerman
-Course: MSDS 696 Practicum II
-Date: 8/11/2020
+<br><b>Name</b>: Thomas Seggerman
+<br><b>Course</b>: MSDS 696 Practicum II
+<br><b>Date</b>: 8/11/2020
 
 ## Project Details
 This project was done for a college Practicum course at Regis University. The project's work was completed by using VBA for web-scraping from Steam's games listings on their website, then using Python for the remainder of the work. The course was 8 week's long, and the resulting list of games had over 16,000 titles.

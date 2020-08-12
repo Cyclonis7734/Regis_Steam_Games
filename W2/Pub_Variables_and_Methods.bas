@@ -3,6 +3,7 @@ Option Explicit
 
 Public Const strSteamMain = "https://store.steampowered.com/search/?sort_by=&sort_order=0&category1=998&filter=topsellers&page="
 
+'enum separated by 10's, in the event that I need to add info between existing entries
 Public Enum TextTypes
     ttDesc_Snippet = 10
     ttReviews_Text = 20
@@ -19,7 +20,9 @@ Public Enum TextTypes
     ttPrice = 130
 End Enum
 
-
+'Does exactly what it says it does, by iterating through the text string
+'given, and replacing any text that is equal to two spaces together.
+'After that, it removes leading spaces that exist in the given string.
 Public Function RemoveExcessSpaces(strText) As String
 Dim booDone As Boolean
 
@@ -39,9 +42,16 @@ Loop Until booDone
 RemoveExcessSpaces = strText
 End Function
 
+'Removes excessive carriage returns. First it replaces them with --vbLine--.
+'This was done to ensure that the replacement was working, and allow for
+'replacement of the various characters that resemble white space/carriage
+'returns in one single grouping of replace statements. I ran into many issues
+'during execution of the various cleanup functions I created, and this wound
+'up making it very clear as to what was happening at each cleanup step. It would
+'be easier to just set the replace function's replacement string to empty, but
+'testing using the replacement with --vbLine-- was made much easier.
 Public Function RemoveExcessCarriageReturns(strText) As String
 Dim booDone As Boolean
-
 
 'Debug.Print "----Start: " & strText
 booDone = False
@@ -49,7 +59,6 @@ strText = Replace(strText, vbCrLf, "--vbLine--")
 strText = Replace(strText, Chr(10), "--vbLine--")
 strText = Replace(strText, Chr(13), "--vbLine--")
 strText = Replace(strText, Chr(9), "--vbLine--")
-
 'Debug.Print "----Replace vbCrLf's: " & strText
 
 Do
@@ -59,9 +68,9 @@ Do
         booDone = True
     End If
 Loop Until booDone
-
 'Debug.Print "----Replace double CR's: " & strText
 
+'Remove excess carriage returns from the beginning of the text string.
 booDone = False
 Do
     If Left(strText, 10) = "--vbLine--" Then
@@ -70,19 +79,18 @@ Do
         booDone = True
     End If
 Loop Until booDone
-
 'Debug.Print "----Replace leading CR's: " & strText
 
+'Actually replace any remaining carriage returns with a single
+'type of carriage return (vbNewLine).
 strText = Replace(strText, "--vbLine--", vbNewLine)
-
-'       Left(strText, 1) = vbCrLf Or _
-'       Left(strText, 1) = Chr(10) Or _
-'       Left(strText, 1) = Chr(13)
 
 RemoveExcessCarriageReturns = strText
 End Function
 
-
+'Loop through the given string, removing anything that's not a number.
+'Additionally, a set of characters could be passed, which could be added
+'to the string of characters to keep.
 Public Function RemoveNonNumeric(strText As String, Optional strListCharsKeep As String) As String
 Dim longChar As Long
 Dim strFin As String
@@ -103,11 +111,12 @@ RemoveNonNumeric = strFin
 
 End Function
 
+'This function was, usually, only called after the RemoveExcessCarriageReturns function call
 Public Function RemoveAllCRs(strText As String) As String
 RemoveAllCRs = Replace(strText, vbNewLine, "")
 End Function
 
-
+'Test sub
 Public Sub testRemovals()
 Dim strPass As String
 strPass = "   " & vbNewLine & "fasdfsadf sa  sadfsadf sdaf saf sf asf  " & vbNewLine & vbNewLine & vbNewLine & vbNewLine & " fafsd fs asf saf afsadfsaf   fasfsdfsdafds gdsagdfgsd   gdf s"
@@ -115,10 +124,14 @@ strPass = RemoveExcessCarriageReturns(RemoveExcessSpaces(strPass))
 Debug.Print strPass
 End Sub
 
+'Create a string by parsing a passed text string, split by any
+'carriage returns. Then, get a specific value from that array.
 Public Function ArrayByCR(strText As String, intIndex As Integer) As String
 Dim arrVals As Variant
 
 arrVals = Split(strText, vbNewLine)
+'return nothing, in the event that the given index for the array is not available.
+'This is achieved by ignoring errors during the index selection.
 On Error Resume Next
 ArrayByCR = arrVals(intIndex)
 On Error GoTo 0

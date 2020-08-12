@@ -8,6 +8,7 @@ Option Explicit
 
 
 Public Sub GetGamesListingFromSteam()
+'Declare Variables
 Dim ie As New InternetExplorer
 Dim ieD As New HTMLDocument
 Dim ecoll As Object
@@ -25,12 +26,13 @@ Dim intMaxPg As Integer
 Dim strAppID As String
 Dim strHref As String
 
+'Set a few of the variables
 longCounter = 0
 longPasteRow = 1
 strPasteRow = Trim(Str(longPasteRow))
 Set wsD = ThisWorkbook.Worksheets("Data")
 wsD.Cells.ClearContents
-wsD.Range("A:A").NumberFormat = "@"
+wsD.Range("A:A").NumberFormat = "@"   'set the format of column A to text
 strPage = "1"
 
 
@@ -41,11 +43,13 @@ strPage = "1"
 'ie.Navigate strSteamMain & strSteamSearch
 ie.Navigate strSteamMain & strPage
 
+'Loop aimlessly while InternetExplorer may be loading the page you've navigated to
 Do While ie.Busy
     DoEvents
 Loop
-
 Application.Wait Now + TimeValue("0:00:01")
+
+'Set various IE objects for use in discovering information about the web pages.
 Set ieD = ie.Document
 Set ecoll = ieD.getElementsByTagName("a")
 Set ecoll2 = ieD.getElementsByClassName("search_pagination_right")
@@ -57,6 +61,7 @@ intMaxPg = CInt(ecoll3.textContent)
 '-------------------------------------------------------------------------
 
 
+'Begin looping through each page
 For intPage = 1 To intMaxPg
     strPage = Trim(Str(intPage))
 '    ie.Quit
@@ -72,6 +77,8 @@ For intPage = 1 To intMaxPg
     Set ieD = ie.Document
     Set ecoll = ieD.getElementsByTagName("a")
     
+    'Loop through the game-list-objects collection
+    'if /app/ is found in the URL and the Game_ID is NOT blank, then capture the object's data
     For Each elem In ecoll
 '        longCounter = longCounter + 1
 '        Debug.Print elem.getAttribute("data-ds-appid")
@@ -92,6 +99,8 @@ For intPage = 1 To intMaxPg
 
 Next intPage
 
+'Clear out the memory of these objects in the event of an improper
+'memory disposal issue in VBA.
 ie.Quit
 Set ie = Nothing
 Set ecoll = Nothing
@@ -126,22 +135,23 @@ Do While ie.Busy
 Loop
 
 Application.Wait Now + TimeValue("0:00:01")
-
 Set ieD = ie.Document
-
 Application.Wait Now + TimeValue("0:00:01")
 
+'Handles issue where an age check page loads, to ensure that the user is at least
+'18 years old. It was easier to login and have Steam save my age, rather than
+'trying to find the objects that hold the Month, Day, and Year values, and then
+'update them. After logging in, the code would just be to hit the View Page button
+'on the page. Then you are brought to the expected store page.
 If InStr(1, ie.LocationURL, "agecheck/") > 0 Then
     Set objViewBtn = ieD.getElementsByClassName("btnv6_blue_hoverfade btn_medium")
     objViewBtn(0).Click
 End If
-    
-'Do While ie.Busy
-'    DoEvents
-'Loop
 Application.Wait Now + TimeValue("0:00:02")
-'Set ecoll = ieD.getElementsByClassName("game_description_snippet")
 
+'NOTE: The function "ReturnCorrectedText" is used to handle formatting and cleanup of the various
+'      data that is being gathered. The steps to clean it up are in that function, rather than
+'      here in the IE scraping code.
 'COL: C ---> Get game description
 ws.Range("C" & strR).Value = ReturnCorrectedText(ieD.getElementsByClassName("game_description_snippet").Item(0).textContent, ttDesc_Snippet)
 
@@ -154,8 +164,6 @@ ws.Range("E" & strR).Value = Mid(strVal, InStr(1, strVal, "|", vbTextCompare) + 
 'COL: F ---> Get Release1
 ws.Range("F" & strR).Value = ReturnCorrectedText(ieD.getElementsByClassName("release_date").Item(0).textContent, ttRelease_Date)
 
-
-'Application.Wait Now + TimeValue("0:00:01")
 'COL: G & H ---> Get Developer & Publisher
 ws.Range("G" & strR).Value = ReturnCorrectedText(ieD.getElementsByClassName("dev_row").Item(0).textContent, ttDeveloper)
 ws.Range("H" & strR).Value = ReturnCorrectedText(ieD.getElementsByClassName("dev_row").Item(1).textContent, ttPublisher)
@@ -167,8 +175,6 @@ On Error GoTo 0
 
 Application.Wait Now + TimeValue("0:00:01")
 
-'ecoll = ieD.getElementsByClassName("details_block").Item
-
 For intLoo = 0 To ieD.getElementsByClassName("details_block").Length
     If InStr(1, ieD.getElementsByClassName("details_block").Item(intLoo).outerText, "Genre: ", vbTextCompare) > 0 Or _
        InStr(1, ieD.getElementsByClassName("details_block").Item(intLoo).outerText, "Title: ", vbTextCompare) > 0 Then
@@ -178,15 +184,6 @@ For intLoo = 0 To ieD.getElementsByClassName("details_block").Length
 Next intLoo
 
 'COL: K:N ---> Get Title, Genre, Franchise, and Release2 columns
-
-'For games that I have in my personal library, the page is structured differently.
-'The below code caters to this fact.
-'If InStr(1, ieD.getElementsByClassName("details_block").Item(0).outerText, "on record", vbTextCompare) > 0 Then
-'    intDBNum = 4
-'Else
-'    intDBNum = 0
-'End If
-
 strVal = ieD.getElementsByClassName("details_block").Item(intDBNum).outerText
 ws.Range("K" & strR).Value = ReturnCorrectedText(strVal, ttTitle)
 
@@ -217,6 +214,7 @@ If ecoll Is Nothing Then
     Set ecoll = ieD.getElementsByClassName("discount_original_price").Item(0)
 End If
 
+'Determine if game is a Demo or Trial. If so, handle price obtaining differently.
 If InStr(1, ecoll.textContent, "Demo", vbTextCompare) > 0 Or _
    InStr(1, ecoll.textContent, "Trial", vbTextCompare) > 0 Then
     If booDiscount Then
@@ -236,13 +234,6 @@ Else
     ws.Range("Q" & strR).Value = ieD.getElementsByClassName("game_purchase_price price").Length
 End If
 
-'ws.Range("R" & strR).Value = ieD.getElementsByClassName("").Item(0).textContent
-'ws.Range("S" & strR).Value = ieD.getElementsByClassName("").Item(0).textContent
-'ws.Range("T" & strR).Value = ieD.getElementsByClassName("").Item(0).textContent
-'ws.Range("U" & strR).Value = ieD.getElementsByClassName("").Item(0).textContent
-'ws.Range("V" & strR).Value = ieD.getElementsByClassName("").Item(0).textContent
-'ws.Range("W" & strR).Value = ieD.getElementsByClassName("").Item(0).textContent
-
 'Debug.Print ie.LocationURL
 ie.Quit
 Set ie = Nothing
@@ -254,11 +245,12 @@ booDiscount = False
 End Sub
 
 
-
 Public Sub TestGameDeets()
 GetGameDetails "https://store.steampowered.com/app/782330/DOOM_Eternal/", ThisWorkbook.Worksheets("Data"), 1
 End Sub
 
+
+'The actual sub that begins and ends the looping process.
 Public Sub GameLooper()
 Dim ws As Worksheet
 Dim longR As Long
@@ -269,6 +261,11 @@ Dim longStopAt As Long
 Set ws = ThisWorkbook.Worksheets("Data")
 ws.Range("AA1").Value = "=COUNTA(A:A)"
 intCounter = 0
+
+'This variable was to have a custom stopping point, rather than just the
+'end of the file. The total time to capture ALL the game's data was over
+'20 hours. This was necessary to not require manual stopping of the code
+'while running, using the control+pause|break keyboard command.
 longStopAt = ws.Range("AD1").Value
 
 For longR = 2 To ws.Range("AA1").Value
@@ -307,8 +304,9 @@ Next longR
 End Sub
 
 
+'This is the Function that handles formatting and cleanup of the various text
+'being captured from each game's store page.
 Public Function ReturnCorrectedText(strText As String, enumTextType As TextTypes) As String
-
 'Based on given text type, decide how to format.
 'First two select case options are for ESRB, as they
 'did NOT require use of the functions nested in the
@@ -382,7 +380,10 @@ ReturnCorrectedText = strText
 
 End Function
 
-
+'RESRECR = abbreviations of the words for the functions
+'being called by this function. These 2 functions were
+'called so often, that it made sense to reduce them to
+'a single function, and cut the lines of code down.
 Public Function RESRECR(strText As String) As String
     strText = RemoveExcessSpaces(strText)
     strText = RemoveExcessCarriageReturns(strText)

@@ -2291,6 +2291,18 @@ At any rate, we've got the top names in gaming all over this list. Ubisoft, Squa
 
 For now, let's break away from EDA, and focus on the next subject here, where we can take a stab at finding correlations and then attempting to make some prediction models. First up, let's see if we can find any correlations in the data that help predict the percentage of positive reviews (PCT_Pos_Rev).
 
+## Correlation Revelations
+
+With the pursuit of correlations at hand, now's probably a good time to setup our Hypotheses for this project's results. Since we're going to focus on two different predictions for our dataset, we'll need 2 different hypotheses. First is reviews, followed up by price. While they are identical in text, except for their mention of the value being predicted, the data sets for them will be different overall. Review data will not be as numerous as pricing, because every game has a price, but not every game has reviews.
+
+The data gathered from Steam's Top Sellers listings...
+<br>    **H**<sub>**0**</sub>: DOES NOT have a correlation with the reviews of the game.
+<br>    **H**<sub>**1**</sub>: DOES have a correlation with the reviews of the game.
+
+The data gathered from Steam's Top Sellers listings...
+<br>    **H<sub>0</sub>**: DOES NOT have a correlation with the pricing of the game.
+<br>    **H<sub>1</sub>**: DOES have a correlation with the pricing of the game.
+
 ```python
 # First thing's first, let's make a new dataframe for our data.
 # drop out anything that doesn't have a percentage value for reviews
@@ -2979,8 +2991,7 @@ sns.heatmap(prc.corr(), annot=True)
 
 ![png](output_71_1.png)
 
-Welp, not so good correlation for the Price column either. At least for this column, we have a stronger correlation based off of a few of the ESRB values. I would wager that this is occurring because the companies that are actually popular enough to feel it necessary to obtain the ESRB ratings, generally have a popular product. Popular product equals more expensive product in this sense as well. At any rate, let's see what a linear model can get for us, with this data.
-
+Welp, not so good correlation for the Price column either. At least for this column, we have a stronger correlation based off of a few of the ESRB values. I would wager that this is occurring because the companies that are actually popular enough to feel it necessary to obtain the ESRB ratings, generally have a popular product. Popular product equals more expensive product in this sense as well. At any rate, let's see what a linear model can get for us, with this data. The next steps are pretty much the same as the previous linear model's creation, so there's no notes this time, just code.
 
 ```python
 prc_col = prc['Price']
@@ -2988,9 +2999,6 @@ prc.drop(labels=['Price'], axis=1,inplace = True)
 prc.insert(0, 'Price', prc_col)
 prc.head()
 ```
-
-
-
 
 <div>
 <style scoped>
@@ -3159,9 +3167,6 @@ prc.head()
 <p>5 rows × 36 columns</p>
 </div>
 
-
-
-
 ```python
 msk = np.random.rand(len(prc)) < .8
 train = prc[msk]
@@ -3213,8 +3218,6 @@ train.info()
     dtypes: float64(2), int32(1), int64(33)
     memory usage: 3.5 MB
     
-
-
 ```python
 x_train = train.iloc[:,1:36]
 x_test = test.iloc[:,1:36]
@@ -3268,16 +3271,11 @@ x_train.info()
     dtypes: float64(1), int32(1), int64(33)
     memory usage: 3.4 MB
     
-
-
 ```python
 lm = linear_model.LinearRegression()
 model = lm.fit(x_train,y_train)
 predictions = lm.predict(x_test)
-```
 
-
-```python
 pred = pd.DataFrame(predictions)
 pred.columns = ['PricePredicted']
 prc2 = x_test.join(y_test)
@@ -3285,9 +3283,6 @@ prc2 = prc2.join(pred)
 prc2['Price_Diff'] = prc2['PricePredicted'] - prc2['Price'] 
 prc2.head()
 ```
-
-
-
 
 <div>
 <style scoped>
@@ -3456,9 +3451,6 @@ prc2.head()
 <p>5 rows × 38 columns</p>
 </div>
 
-
-
-
 ```python
 GetModelInfo(y_test,pred,'PricePredicted','Price_Diff',prc2)
 ```
@@ -3466,24 +3458,17 @@ GetModelInfo(y_test,pred,'PricePredicted','Price_Diff',prc2)
     Mean squared error (closer to 0 is better): 65.625212861764
     r2 score (1 is perfect): 0.2864238182843898
     
-
-
 ![png](output_78_1.png)
 
+Nothing unexpected here. Terrible accuracy and no good scores for Mean Squared Error or r-squared scores. So, Price and Genre tags aren't able to really be predicted with this dataset, it would seem.
 
-Nothing unexpected here. Terrible accuracy and no good scores for Mean Squared Error or r-squared scores. So, Price and Genre tags aren't able to really be predicted with this dataset.
-
-Let's take a look at the correlations that can be found, when basing the data off of specific values in differing columns. As an example, let's drill down on developers to begin with. First we'll make a list of developers, then iterate through the list, picking out each developers data. Let's see if we can come up with any commonalities that games have, based on the developer!
-
+Before we call it a day, let's take a look at the correlations that can be found when basing the data off of specific values in differing columns. Though we could extend this idea further, let's drill down on developers only for now. First we'll make a list of the top 30 developers by title count, then iterate through the list picking out each developers data. This will make it so that we can identify any correlations within specific developer's available data.
 
 ```python
+# Start out with a clean data set, then filter down the developers by title counts.
+# This list of developers will be used during our loop, later on.
 dev_brk = gms2.copy()
 dev_top30 = dev_brk['Developer_Primary'].value_counts().nlargest(30).rename_axis('Developer_Primary').reset_index(name='Title_Count')
-```
-
-
-```python
-# dev_uniques.rename(columns={0: 'DevNm'}, inplace=True)
 dev_top30.info()
 ```
 
@@ -3497,20 +3482,15 @@ dev_top30.info()
     dtypes: int64(1), object(1)
     memory usage: 608.0+ bytes
     
-
-
 ```python
-dev_brk = dev_brk
-# dev_brk = dev_brk.drop(['Purchase_Options',
-#                         'Franchise_Count',  
-#                         'Developer_Count', 
-#                         'Publisher_Count']
-#                         , axis=1)
-
+# Loop through the developer list, and find it in the clean data set from earlier.
 for devo in dev_top30['Developer_Primary']:
     dtmp = dev_brk.loc[dev_brk['Developer_Primary'] == devo]
+    
     # https://stackoverflow.com/questions/17778394/list-highest-correlation-pairs-from-a-large-correlation-matrix-in-pandas
+    # Create a correlation object, and refine it so that we have only absolute values of the correlations.
     corr_matrix = dtmp.corr().abs()
+    
     # numpy.triu function returns the upper triangle of a matrix. It requires parameters which
     # tell it the number of rows, and whether you want the rows above or below the diagonal
     # center line of the matrix. np.ones is used to create an array of 1's, using the shape of
@@ -3826,15 +3806,11 @@ for devo in dev_top30['Developer_Primary']:
                      Developer_Count     0.105000
     dtype: float64
     
-
-
 ```python
+# Let's take a look at the first developer entry from the above iteration loop.
 dev_cog = dev_brk.loc[dev_brk['Developer_Primary'] == 'Choice of Games']
 dev_cog.mean()
 ```
-
-
-
 
     PCT_Pos_Rev           96.000000
     Total_Rev           1748.000000
@@ -3847,21 +3823,13 @@ dev_cog.mean()
     Purchase_Options       1.100917
     dtype: float64
 
+In reviewing the data above, you can see that there are times when a high correlation was detected for various columns. Some of the correlations are interesting, and would provide insight at the developer level for some things. Some of it just makes simple logical sense though, so it's very dependent on the developer, really. We could use this information to create various prediction models, geared towards finding trends on developers with similar groupings of data. However, that is beyond the scope of this project.
 
+## Conclusion
 
-As you can see, again, nothing is providing a correlation that wouldn't be something obvious. The idea that we have the Price column correlating with the review columns, really tells us nothing. It's pretty obvious that a game's price would correlate with reviews. The various counts on developer and publisher, along with the Franchise and purchase options, were taken out of the dataset entirely. There was a tendency to have the price or reviews correlate with these options. However,  those correlations really didn't tell us anything that wouldn't be obvious. All of these have count values, and are repeated for many of the games. You can see this in the results from the mean() function above, where we filtered on Choice of Games as the developer. This indicates that, nearly, all of the purchase options are 1.
+With such low MSE and r-squared values, we fail to reject both of the Null Hypotheses from this project. I didn't actually run any functions to obtain the p-value, to get the "official" version, because the correlations and model stats were so bad that it didn't seem necessary. If I were to try and deep dive into this project for an even lengthier purpose, I would go back and fix a ton of stuff that was discovered later into the project. The data cleanup would, definitely, be the main focus at this point. The main problem that I found with this dataset, was the probability that game data was somehow "oddly shown" on Steam's pages, most of the time. At least that's how it felt, as I progressed further into the project each week. This is not to say that Steam's data is messy per se, but rather that it is constantly changing.
 
-At this point, it would seem that the only correlation we've been able to see, is with the ESRBWhy tags and their ESRB ratings. Which is a useless observation. Even after gathering 16,000 game titles from Steam, we cannot easily predict what the price should be for a game, nor what the reviews will be.
+In thinking through how Steam works, it becomes a little more obvious as to why this is the case. Game data that is captured on a single day, could be different within a few hours. Steam is constantly engaging with gamers by offering deals and cutting prices. They probably have a team of researchers who only have one purpose. That purpose being to decide whether a game's price should be adjusted for any number of various reasons. The data being captured here, really needs to be based more on different captures of the game's stats at different dates. As an example, early access games can have totally different prices once they have actually had a release date. The same game, with a release date of 1/1/2021, could be priced $5 cheaper before that date, and after being released for over 4 months. The flow of time is a key component to gauging price settings of games, in this sense.
 
-
-
-
-
-
-
-
-
-
-
-
+As for why review correlations didn't happen with this data, I think that's something that could be attributed to data we don't have. Also, the reason that games "make it" into having good reviews, varies widely. Some games can have terrible reviews on one platform, but not another (PC vs. Playstation, for example). Some games can have a killer story, but terrible gameplay, earning them more of a 50/50 split. A simple yes/no review, like what Steam has, just doesn't really cut it these days. At the end of the day though, it is possible that game review prediction is so closely tied to who's playing it, that it's not really something that matters to try and predict. Also, and this is unique to the game industry in some sense, games can be updated to achieve better reviews later on. A perfect example of this is the game No Man's Sky. It got extremely poor reviews upon release, due to poorly managed expectations. The developer's stuck with improving the game, for years after its release, and now the reviews are infinitely better. So, this would seem to make it seem as though predicting the review ratings of a game are based on many factors that we simply can't capture at the moment!
 

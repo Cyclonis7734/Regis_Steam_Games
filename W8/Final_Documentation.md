@@ -11,7 +11,7 @@ Before beginning any Data Science project, it's good practice to determine what 
 <p><b>Can steam's store pages for games give us any insight into expectations for pricing or reviews of games?</b>
 
 ## Web-Scraping Fun
-I have only done web-scraping a few times in my life, and it has never been pleasant. The amount of issues that occur when attempting to gather information from template web pages are directly related to how "clean" a website's data is kept. Needless to say, Steam, with it's thousands of games, is not without its issues in its game database! In deciding how to approach gathering this data, some important distinctions were made:
+I have only done web-scraping a few times in my life, and it has never been pleasant. The amount of issues that occur when attempting to gather information from template web pages are directly related to how "clean" a website's data is kept. Needless to say, Steam, with it's thousands of games, is not without issues in its game database! In deciding how to approach gathering this data, some important distinctions were made:
 1. We would focus on games, and NOT software sold by Steam.
 2. Narrow down the available games list by filtering for the Top Sellers listings.
 3. Games that were in a bundle, will ONLY have the first title listed, as the focus of the group.
@@ -544,22 +544,22 @@ On Error GoTo 0
 End Function
 ```
 ## Final Cleanup Steps
-Now that we have obtained the data, it was time to clean up any obvious issues that we could fix within VBA relatively easily. To do that, I wound up creating copies of the final versions of the data, and doing my own version of iterative cleanup. Essentially, I made a copy of the previous week's finalized data file, then proceeded to find things to update or clean up on it. Below, we'll go over a quick recap of the various things that were done. If you want to see deeper details as to what actually happened, you can do so by looking at each week's notes files (Markdown files with a date as their name in the format of MMDDYYYY.md).
+Now that we have obtained the data, it was time to clean up any obvious issues that we could fix within VBA. To do that, I wound up creating copies of the final versions of the data, and doing my own version of iterative cleanup. Essentially, I made a copy of the previous week's finalized data file, then proceeded to find things to update or clean up. Below, we'll go over a quick recap of the various things that were done. If you want to see deeper details as to what actually happened, you can do so by looking at each week's notes files (Markdown files with a date as their name in the format of MMDDYYYY.md).
 
 1. ESRBWhy Cleanup - Broke out all possible statements into keywords. 
-2. Game_ID cleanup - Remove duplicate game ID's (handle game bundling)
+2. Game_ID cleanup - Remove duplicate game ID's and handle game bundling.
 3. Release Date cleanup - decide which release date capturing to use, and handle oddities.
 4. Franchise cleanup - Broke out into separate columns of "Is Franchise" and "Franchise_Count"
 5. Developer/Publisher cleanup - Remove abbreviations within names, breakout into various columns.
 6. Genre cleanup - broke out genre tags listings into Y/N columns, for the most used genre tags.
 7. Price cleanup - remove games with odd pricing (58 rows). Update Free to Play pricing to $0.
 
-After this was all said and done, there were now multiple new columns, and many different breakouts for some of the columns. All of these could, possibly, be used to do some prediction modeling later on. I wound up writing up a few VBA functions during the cleanup processes from time to time. They can be found in some of the .bas files in each week's folder, or in the .xlsm files with code in them. One of them was for looping through a breakout of the Genre and ESRBWhy tag columns. The breakout was accomplished by using the "Text to Columns" feature in Excel. Once the feature was used, the columns created from the splitting (out to the right of the column the Text to columns was ran on), were ran through some code to copy-paste them into one column, then remove duplicates. This made it easier to create singular lists of the possible values for each column.
+After the above was cleanup steps were completed, there were now multiple new columns, and many different breakouts for some of the columns. All of these could, possibly, be used to do some prediction modeling. I wrote a few VBA functions during the various cleanup processes. They can be found in some of the .bas files in each week's folder, or in the .xlsm files with code in them. One of them was for looping through a breakout of the Genre and ESRBWhy tag columns. The breakout was accomplished by using the "Text to Columns" (TtC) feature in Excel. Once the TtC was used on a single column, resulting columns created from the splitting (out to the right of the column the TtC was run on), were then ran through multiple functions to copy-paste them into a single column.
 
-The other functions pertained to various character filtering/replacing or other miscellaneous needs. The cleanup steps were done during week's 2-4, and a final .csv file was created on week 4, that became the main source of data. The file titled SteamData_W4_Cleaned.csv was then going to be imported into a different language, for further work.
+After moving all possible values into a single column, we then remove duplicates from that column's values, leaving a singular list. The myriad other functions pertained to various character filtering/replacing, or other miscellaneous needs. The cleanup steps were done during week's 2-4, and a final .csv file was created on week 4, that became the main source of data. The file titled SteamData_W4_Cleaned.csv was then going to be imported into a different language, for further work.
 
 ## Pushing Forward
-With the 20+ hours of run time to capture the data being completed, it was time to start pushing the data into Python for the remaining steps. The work performed was done in Jupyter Notebook, for ease of storytelling in the previous week's files. Note that the details in this markdown file may not line up with the commentary from the previous week's files. This is because of the desire was to keep "note tracking" in the Jupyter Notebook files, rather than the final commentary here. Without further ado, let's get started on reviewing the initial steps.
+With the 20+ hours of run time to capture the data being completed, it was time to start pushing the data into Python for the remaining steps. The work performed was done in Jupyter Notebook, for ease of storytelling in the previous week's files. Note that the details in this markdown file may not line up with the commentary from the previous week's files. This is because it was desired to keep "note tracking" in the Jupyter Notebook files, rather than the final commentary in the code below.
 
 ```python
 # First off, let's get started by importing the necessary libraries.
@@ -1070,7 +1070,7 @@ unique_counts
   </tbody>
 </table>
 
-Get rid of some of the columns that we definitely won't be using. The columns listed below in the drop() command had information that was not useful for anything other than the initial capturing. The exception being the Description column. I believe that this column could be used for some NLP, if I ever revisit this data set. That said, I wanted to focus on the remaining columns of data, for this project's needs. After removing the columns, we're using the head() function to take a look at the columns, and make sure the columns list is what we want now.
+Next, let's get rid of some of the columns that we definitely won't be using. The columns listed below in the drop() command had information that was not useful for anything other than the initial capturing. The exception to this, being the Description column, as this could have other uses. The Description column could be used for NLP, if I ever decide to revisit this data set. That said, I wanted to focus on the remaining columns of data, for this project's needs. After dropping the below columns, we're using the head() function to take a look at the remaining columns, and make sure the columns list is what we need.
 
 ```python
 gms2 = gms.copy()
@@ -1178,25 +1178,28 @@ gms2.mean()
     Purchase_Options       1.395523
     dtype: float64
 
-## Separate the Data for EDA
+## Separate the Data for Exploratory Analysis (EDA)
 
 ```python
 # Create separate data sets for different approaches
 # esrb = ESRB focus ONLY (drop rows where no ESRBWhy data exists)
-# genre = Genre focus ONLY
-# devpub = developer and publisher focus (Drop rows with no publisher data)
+# If you're not familiar with it, ESRB stands for "Entertainment Software Rating Board"
+# If you would like to learn more about ESRB: https://www.esrb.org/ratings-guide/
+
 esrb = gms2.copy()
 esrb = esrb[esrb['ESRBWhy'].notna()]
 
+# genre = Genre focus ONLY
 genre = gms2.copy()
 
+# devpub = developer and publisher focus (Drop rows with no publisher data)
 devpub = gms2.copy()
 devpub = devpub[devpub['Publisher_Primary'].notna()]
 ```
 
 ## ESRB Why EDA
 
-First up, let's take a look at the ESRB ratings, and why games get rated the way they do. To do that, we've dropped out all rows that did NOT have ESRBWhy data breakouts. Since we took a look at some of the averages from all of our data, let's take a look at the averages for only the games that have an ESRBWhy value available.
+First, let's take a look at the ESRB ratings, and why games get rated the way they do. To do that, we've dropped out all rows that did NOT have ESRBWhy data breakouts. Since we already took a look at some of the averages from all of the data, let's review the averages for games that have an ESRBWhy value available.
 
 ```python
 esrb.mean()
@@ -1211,14 +1214,13 @@ esrb.mean()
     Purchase_Options        1.707171
     dtype: float64
 
-Did you notice the unusually high Franchise_Count average from earlier (on all the data), and that it is still present? This means that we're, probably, only seeing games that have lots of eyes on them, normally. This could mean that ESRB is obtained by games where the popularity hits a specific point, and the developer/publisher feels that it is necessary to get it?
+Did you notice the unusually high Franchise_Count average from earlier (on all the data), and that it is still present? This means that we're, probably, only seeing games that have garnered lots of attention. This could mean that ESRB is obtained by games where the popularity hits a specific point, and the developer/publisher feels that it is necessary to get it?
 
-In a quick Google search, there is no actual enforcement that a game HAS to get ratings on their game, to be released. ESRB is simply a "professional" and respected means of obtaining a rating for content. The Franchise count of 10+, has a few stipulations in its calculations, that make this more acceptable.
+After doing a quick Google search, there is no actual enforcement that a game HAS to get ratings on their game, to be released. ESRB is simply a "professional" and respected means of obtaining a rating for games. The Franchise count of 10+, has a few stipulations in its calculations, that make this more acceptable.
     1. It's NOT counting values of Null
     2. The closer a franchise reaches to having 10+ titles, the more likely it would be, that they would want to obtain ESRB ratings.
 
-Chances are, if you're a gamer, you've heard of these titles before. I would wager that you don't see Indie (Independent Developer) games, very often, on this list, because they do not have a franchise yet. That said, let's find out if that's true or not!
-
+Chances are, if you're a gamer, you've heard of these titles before. I would wager that you don't see Indie (Independent Developer) games, very often on this list, because they do not have a franchise yet. That said, let's find out if that's true or not!
 
 ```python
 esrb['Indie'].value_counts().plot.pie()
@@ -1226,7 +1228,7 @@ esrb['Indie'].value_counts().plot.pie()
 
 ![png](output_14_1.png)
 
-So, not a large amount, as expected. However, larger than I would have guessed! Let's dive into that some more...
+So, not a large amount of the games are Indie, as expected. However, there is still a larger amount of games made by Indie Developers than I would have guessed! Let's dive into that some more...
 
 ```python
 # Let's take a look at the indie games that DO have an ESRB rating. See if we recognize any of them.
@@ -1252,9 +1254,9 @@ ind['Title'].head(n=15)
     146                   Wreckfest
     Name: Title, dtype: object
 
-Okay, this is beginning to make more sense now. Apparently, the Genre tag of Indie, is very much open for interpretation! I know Rocket League is made by developer Psyonix. I would struggle to describe Psyonix as an indie developer. I suppose there needs to be a definition of what makes a developer an "Indie" developer, at this point.
+This is beginning to make more sense now. Apparently, the Genre tag of Indie, is very much open for interpretation! I know Rocket League is made by developer Psyonix. I would struggle to describe Psyonix as an indie developer. I suppose there needs to be a definition of what makes a developer an "Indie" developer, at this point.
 
-In Googling the topic, I found that there is not an "official" definition. However, the main focus is on monetary support by the developers, from a publisher of some sort. This would make sense for all of these games, really. They started out with a handfull of developers, and made a popular game. That can be said of all of these titles. Psyonix is now large, but their first game came out on the Playstation 3, several years ago. The predecessor to Rocket League (which was identical in concept, but different in execution) was titled... Ready for this?... Supersonic Acrobatic Rocket-Powered Battle-Cars.
+In Googling the topic, I found that there is not an "official" definition. However, the main focus is on monetary support by the developers, from a publisher of some sort. This would make sense for all of these games, really. They started out with only a handfull of developers, and made a popular game. That can be said of all of these titles. Psyonix is now large, but their first game came out on the Playstation 3, several years ago. The predecessor to Rocket League (which was identical in concept, but different in execution) was titled... Ready for this?... Supersonic Acrobatic Rocket-Powered Battle-Cars.
 
 Despite the horrible older game's title, they revamped it, made it for a new era, and delivered the simpler-titled sequel, Rocket League, sometime in 2015. The game was a massive success, earning Psyonix a buyout from Epic Games, the studio that owns the popular game Fortnite. I'm guessing they haven't removed the genre tag, since Psyonix was "picked up" from Epic games, and was released as an Indie title in the "monetarily-focused" definition.
 
@@ -1312,7 +1314,7 @@ esrb.groupby('ESRB', as_index=False)['PCT_Pos_Rev'].mean()
   </tbody>
 </table>
 
-Nothing shocking here. The fluctuation here is minimal at best. Looks like Early Childhood (EC) ratings are all null in that column. This, kind of, makes sense. Steam is on PC. PC's, and the games you can play on them, are usually not available to kids who are that early into their development. I would imagine, most parents would not want to give a toddler a keyboard and mouse to learn with! Rating Pending (RP) seems a little odd though. I'm gonna guess that there are very few titles in any of the categories that average out to an exact integer, making the Adults Only (AO) value just as suspicious. Let's take a look.
+Nothing shocking here. The fluctuation is minimal at best. Looks like Early Childhood (EC) ratings are all null in that column. This, kind of, makes sense, because Steam is only available on PC's. PC's, and the games you can play on them, are usually not available to kids who are in early development. I would imagine most parents would not want to give a toddler a keyboard and mouse to learn with! Rating Pending (RP) seems a little odd though. I'm gonna guess that there are very few titles in any of these categories, seeing that they average out to an exact integer, making the Adults Only (AO) value just as suspicious. Let's take a look.
 
 ```python
 adon = esrb.copy()
@@ -1673,7 +1675,7 @@ esrb5.groupby('ESRB').mean().round(4)*100
 
 In the data above, the numbers are averages for each of the times that a Yes appears, for the ESRBWhy column's breakout values. Not a surprise, that most games have violence of some sort, and the rest of the columns make sense as to why they might have higher or lower average counts that determine the ESRB rating. I think the more interesting keywords are Partial, Intense, and Strong. These 3 seemed to be tags that definitely lead to the Mature rating, more than the rest. The remaining words are actual descriptors, while the intensity of the descriptors is what actually seems to, more accurately, depict the rating. If the word Strong is used as a descriptor, it's around a 57% chance that the game is rated M.
 
-While we could go further down this rabbit hole, moving onto some other EDA seems more appropriate to keep a good flow. Lets move on, and do some looking at other breakouts of the games, based off of ESRB ratings.
+While the depth of this subject could be explored, using NLP, we're going to move on to answering some additional questions to our ESRB data set.
 
 ```python
 # What's the highest priced game(s) on the list, after removal of anything without an ESRBWhy value?
@@ -1756,9 +1758,9 @@ se['Franchise'].value_counts().nlargest(30).plot.bar(color=['C7'])
 
 ![png](output_35_1.png)
 
-Whew! I didn't know they had 17+ games in their FF series! Suppose there are several "extensions" of various entries in the series though. Tomb Raider Franchise also appears to be a popular series as well. Not sure if those are only the newer versions of Tomb Raider, or if they have a bunch of remakes of the old series from the playstation though.
+Whew! I didn't know they had 17+ games in their FF series! I suppose there are several "extensions" of various entries in the series. The Tomb Raider Franchise also appears to be a popular one as well. Not sure if those are only the newer versions of Tomb Raider, or if they have a bunch of remakes of the old series from the playstation.
 
-Alright, now that we've jumped in on ESRB, let's take a look at some of the other breakouts, and see what we can find. Next up is the Genre tags EDA.
+Let's take a look at some of the other breakouts. Next up is the Genre tags EDA.
 
 ```python
 genre.info()
@@ -2029,7 +2031,7 @@ gen_f3.loc[gen_f3['SumGenres'] == 0]
   </tbody>
 </table>
 
-Twice, we have proven that the Genre tags are, pretty much, always present in the game data from Steam. Now let's take a deeper dive into the results, and see what we can discover.
+Twice, we have proven that the Genre tags are always present in the game data from Steam. Now let's take a deeper dive into the results, and see what we can discover.
 
 ```python
 # What game Genre tags have the highest average Prices?
@@ -2052,7 +2054,7 @@ for col in gen_pr1.iloc[: , 27:39]:
     $14.29 --> Sports
     $12.03 --> Strategy
     
-Above view is okay, but it's not great for comparing via visualizations. Let's spice it up, and turn it into a dataframe instead. Once we do that, we can actually view everything as a simple bar chart.
+The above print out is simple, but it can be made better with visualizations. Let's spice it up, and turn it into a dataframe instead. Once we do that, we can actually view everything as a simple bar chart.
 
 ```python
 # create an empty dataframe with our two columns we want to use as x and y.
@@ -2073,7 +2075,7 @@ gen_pravg.plot.bar(x='Genre',y='Avg Price',rot=90,color=['C2'])
 
 ![png](output_47_1.png)
 
-Nothing terribly exciting here, honestly. This tells me a little bit about the cost by genre, but not enough to warrant a strong connection that might be unexpected. Massive Multiplayer tag is probably combined heavily with the "Free to Play" tag, which is why it's at the price average of half of what a usual monthly payment to play subscription based games like that is (~$15/month). The rest of the games don't seem to have enough of a price gap to warrant any noticeable Genre tag causing a deep change. Genre is another area that we could deep dive into, for several hours. For now, lets move on to the developer and publisher focused data sets.
+This tells us a little bit about the cost by genre, but not enough to warrant a strong connection that might be unexpected. The Massive Multiplayer tag is probably combined, heavily, with the "Free to Play" tag. This is why it's price average is about half of what a usual monthly payment to play subscription based games is (~$15/month). The rest of the games don't seem to have enough of a price gap, to warrant any noticeable Genre tag causing a deep change. Genre is another area that we could deep dive into, for several hours. For now, lets move on to the developer and publisher focused data sets.
 
 ```python
 # Which developers/publishers have the most titles under their belts
@@ -2083,9 +2085,9 @@ devpub['Developer_Primary'].value_counts().nlargest(30).plot.bar(color=['C4'])
 
 ![png](output_49_1.png)
 
-Wow! Choice of Games, I had never even heard of. After going to their developer page on Steam, they have 116 games available! Choice of Games specializes in making text based games. This means they, probably, have a shorter turnaround time for the development process. None of their games are anything that I've heard of, which says a lot about the popularity of their game types. So, in reviewing these developers further, I'm going to guess that I will not have heard of most of the games they've made. Aside form Square Enix and KOEI TECMO, I don't recognize any of these developer studios. Looking at the Developer counts, may not wield us any useful insights, at this point, other than the idea that we don't know the developers of games as well as we should, maybe?
+Wow! Choice of Games, I had never even heard of. After going to their developer page on Steam, they have 116 games available! Choice of Games specializes in making text based games. This means they, probably, have a shorter turnaround time for the development process. None of their games are anything that I've heard of, which says a lot about the popularity of their game types. So, in reviewing these developers further, I'm going to guess that I will not have heard of most of the games they've made. Aside from Square Enix, Ubisoft, Valve, and KOEI TECMO, I don't recognize any of these developer studios. Looking at the Developer counts, may not wield us any useful insights, other than the idea that we don't know the developers of games as well as we should, maybe?
 
-After looking at a few of the ones I haven't heard of, it is clear that there may be some saturation of game developers who are specializing in less popular types of games still. The top 3 developers in this list, seemed to be making games with a "quick and dirty" approach. These developers churned out a bunch of "no-name" games that are not popular on Steam, all of which had low prices. 2 words, 1 bad stigma... Market Saturation.
+After looking at a few of the developers I haven't heard of, it is clear that there may be some saturation of game developers who are specializing in less popular types of games still. The top 3 developers in this list, seemed to be making games with a "quick and dirty" approach. These developers churned out a bunch of "no-name" games that are not popular on Steam, all of which had low prices.
 
 ```python
 # Lets take a look at publishers now instead.
@@ -2097,9 +2099,9 @@ devpub['Publisher_Primary'].value_counts().nlargest(30).plot.bar(color=['C3'])
 
 These Publishers are much more familiar to me, which says a lot about the game industry, sadly. Developer studios get far less promotion for their games than the Publishers do. Big Fish Games, in the number 1 spot here, was not a Publisher I'd heard of. Their games are still not popular titles that are mainstream, but their prices are higher than the odd developers we saw in the Developer focus. They are "the largest publisher of Hidden Object games," according to their About page on Steam. I did not know that "Hidden Object games" was a type of game even!
 
-At any rate, we've got the top names in gaming all over this list. Ubisoft, Square Enix, THQ, Sega, Devolver, Bandai, and a slew of others. I thought that we'd see a few more big names here, but I'm gonna guess that the saturation of Developers is also plaguing the list of games from this viewpoint as well. If we had sales data, we could probably look at that, as a much bigger "tell" of which publishers and developers are truly mainstream. We may be able to discern the quality of a publisher or developer, based off of these factors though.
+At any rate, we've got the top names in gaming all over this list. Ubisoft, Square Enix, THQ, Sega, Devolver, Bandai, and a slew of others. I thought that we'd see a few more big names here, but I'm gonna guess that this type of saturation is also plaguing the list of games from the Developers breakout as well. If we had sales data, we could probably look at that, as a much bigger "tell" of which publishers and developers are truly mainstream. We may be able to discern the quality of a publisher or developer, based off of these factors.
 
-For now, let's break away from EDA, and focus on the next subject here, where we can take a stab at finding correlations and then attempting to make some prediction models. First up, let's see if we can find any correlations in the data that help predict the percentage of positive reviews (PCT_Pos_Rev).
+For now, let's break away from EDA and focus on finding correlations and making some prediction models. First up, let's see if we can find any correlations in the data that help predict the percentage of positive reviews (PCT_Pos_Rev).
 
 ## Correlation Revelations
 
@@ -2313,12 +2315,15 @@ sns.heatmap(revs.corr(), annot=True)
 
 ![png](output_56_1.png)
 
-As you can see, the column "PCT_Pos_Rev" does not correlate well with anything, really. The highest correlation points were for Massive Multiplayer with -.26 and the Genre tag of Indie at .21. However, we're going to try and see if we can still manage to find some accuracy when using a linear regression prediction model. 
+As you can see, the column "PCT_Pos_Rev" does not correlate well with anything. The highest correlation points were for Massive Multiplayer with -.26 and the Genre tag of Indie at .21. However, we're going to try and see if we can still manage to find some accuracy when using a linear regression prediction model. 
 
 ```python
 # Start off with a fresh new dataframe to work with.
-# drop out the Franchise counts, then split the data into
-# training and test sets (80-->20).
+# In reviewing the data before these steps, the Franchise_Counts
+# column had many null values in it. For simplicity's sake, I
+# decided to remove the column entirely, as it seemed like the
+# number of null values would not effect the model anyways.
+# After that, we split the data into training and test sets (80-->20).
 revs2 = revs.copy()
 revs = revs.drop(['Franchise_Count'], axis=1)
 msk = np.random.rand(len(revs)) < .8
@@ -2598,9 +2603,9 @@ revs3.head()
 </table>
 <p>5 rows × 39 columns</p>
 
-While a table can tell us a fair amount about the model's accuracy, let's deck it out and make a visualization as well. To do that, we can take a look at the delta, mapped against a value of 0. This will give us a decent view of the difference between the predictions and actual values. Since we're also going to take a look at a price prediction model later, let's turn this code into a function, so we can use it later on!
+While a table can tell us a fair amount about the model's accuracy, let's deck it out and make a visualization as well. To do that, we can take a look at the delta, mapped against a value of 0. This will give us a decent view of the difference between the predictions and actual values. Since we're going to take a look at a price prediction model later, let's turn this code into a function, so we can use it later on!
 
-Below, we'll start out by printing out the model's MSE and r-squared values, to get an immediate gauge on accuracy. After that, we begin building our plots by pulling in the 2 columns that we're comparing (actual vs. predicted). Next is setting up various plot formatting options, in particular the size of the chart, and the x/y limits. After that, we establish the scatterplot as an object, then create a red line across the 0 marker on the chart for easy visualizing.
+Below, we'll start out by printing out the model's Mean Squared Error (MSE) and r-squared (r2) values, to get an immediate gauge on accuracy. After that, we begin building our plots by pulling in the 2 columns that we're comparing (actual vs. predicted). Next is setting up various plot formatting options, in particular the size of the chart, and the x/y limits. To finish off the function, we establish the scatterplot as an object, then create a red line across the 0 marker on the chart for easy reference.
 
 ```python
 def GetModelInfo(ytest, predvals, predname, diffname, dafra):
@@ -2762,7 +2767,7 @@ sns.heatmap(prc.corr(), annot=True)
 
 ![png](output_71_1.png)
 
-Welp, not so good correlation for the Price column either. At least for this column, we have a stronger correlation based off of a few of the ESRB values. I would wager that this is occurring because the companies that are actually popular enough to feel it necessary to obtain the ESRB ratings, generally have a popular product. Popular product equals more expensive product in this sense as well. At any rate, let's see what a linear model can get for us, with this data. The next steps are pretty much the same as the previous linear model's creation, so there's no notes this time, just code.
+Bad correlation again, even for the Price column. At least for Price, we have a stronger correlation based off of a few of the ESRB values. I would wager that this is occurring because the companies that are actually popular enough to feel it necessary to obtain the ESRB ratings, generally have a popular product. A popular product would probably be a more expensive product. At any rate, let's see what a linear model can get for us, with this data. The next steps are pretty much the same as the previous linear model's creation, so there's no notes this time, just code.
 
 ```python
 prc_col = prc['Price']
@@ -3201,9 +3206,9 @@ GetModelInfo(y_test,pred,'PricePredicted','Price_Diff',prc2)
     
 ![png](output_78_1.png)
 
-Nothing unexpected here. Terrible accuracy and no good scores for Mean Squared Error or r-squared scores. So, Price and Genre tags aren't able to really be predicted with this dataset, it would seem.
+Nothing unexpected here, the model achieved terrible Mean Squared Error and r-squared scores. So, Price and Genre tags can't be predicted with this dataset.
 
-Before we call it a day, let's take a look at the correlations that can be found when basing the data off of specific values in differing columns. Though we could extend this idea further, let's drill down on developers only for now. First we'll make a list of the top 30 developers by title count, then iterate through the list picking out each developers data. This will make it so that we can identify any correlations within specific developer's available data.
+Before we throw in the towel, let's take a look at the correlations that can be found when drilling down on specific columns. We could extend this drill down to any column, instead we'll focus our drill down on the Developer_Primary column. We'll begin by making a Dataframe of the top 30 developers, aggregated by title count. Then we'll iterate through all of our data, picking out each developer'/s data. This will make it so that we can identify any correlations within specific developer's available data.
 
 ```python
 # Start out with a clean data set, then filter down the developers by title counts.
@@ -3572,5 +3577,4 @@ With such low MSE and r-squared values, we fail to reject both of the Null Hypot
 
 In thinking through how Steam works, it becomes a little more obvious as to why this is the case. Game data that is captured on a single day, could be different within a few hours. Steam is constantly engaging with gamers by offering deals and cutting prices. They probably have a team of researchers who only have one purpose. That purpose being to decide whether a game's price should be adjusted for any number of various reasons. The data being captured here, really needs to be based more on different captures of the game's stats at different dates. As an example, early access games can have totally different prices once they have actually had a release date. The same game, with a release date of 1/1/2021, could be priced $5 cheaper before that date, and after being released for over 4 months. The flow of time is a key component to gauging price settings of games, in this sense.
 
-As for why review correlations didn't happen with this data, I think that's something that could be attributed to data we don't have. Also, the reason that games "make it" into having good reviews, varies widely. Some games can have terrible reviews on one platform, but not another (PC vs. Playstation, for example). Some games can have a killer story, but terrible gameplay, earning them more of a 50/50 split. A simple yes/no review, like what Steam has, just doesn't really cut it these days. At the end of the day though, it is possible that game review prediction is so closely tied to who's playing it, that it's not really something that matters to try and predict. Also, and this is unique to the game industry in some sense, games can be updated to achieve better reviews later on. A perfect example of this is the game No Man's Sky. It got extremely poor reviews upon release, due to poorly managed expectations. The developer's stuck with improving the game, for years after its release, and now the reviews are infinitely better. So, this would seem to make it seem as though predicting the review ratings of a game are based on many factors that we simply can't capture at the moment!
-
+As for why review correlations didn't happen with this data, I think that's something that could be attributed to data we don't have. Also, the reason that games "make it" into having good reviews, varies widely. Some games can have terrible reviews on one platform, but not another (PC vs. Playstation, for example). Some games can have a killer story, but terrible gameplay, earning them more of a 50/50 split. A simple yes/no review, like what Steam has, just doesn't really cut it these days. At the end of the day though, it is possible that game review prediction is so closely tied to who's playing it, that it's not really something that matters to try and predict. Also, and this is unique to the game industry in some sense, games can be updated to achieve better reviews later on. A perfect example of this is the game No Man's Sky. It got extremely poor reviews upon release, due to poorly managed expectations. The developer's continued improving the game, for years after its release, and now the reviews are infinitely better. So, this would indicate that predicting the review ratings of a game are based on many factors that we simply can't capture at the moment!

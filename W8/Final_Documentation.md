@@ -559,7 +559,7 @@ After this was all said and done, there were now multiple new columns, and many 
 The other functions pertained to various character filtering/replacing or other miscellaneous needs. The cleanup steps were done during week's 2-4, and a final .csv file was created on week 4, that became the main source of data. The file titled SteamData_W4_Cleaned.csv was then going to be imported into a different language, for further work.
 
 ## Pushing Forward
-With the 20+ hours of run time to capture the data being completed, it was time to start pushing the data into Python for the remaining steps. The work performed was done in Jupyter Notebook, for ease of storytelling in the previous week's files. Note that the details in this markdown file may not line up with the commentary from the previous week's files. This is because of the desire to keep "note tracking" in the Jupyter Notebook files, rather than the final commentary here. Without further ado, let's get started on reviewing the initial steps.
+With the 20+ hours of run time to capture the data being completed, it was time to start pushing the data into Python for the remaining steps. The work performed was done in Jupyter Notebook, for ease of storytelling in the previous week's files. Note that the details in this markdown file may not line up with the commentary from the previous week's files. This is because of the desire was to keep "note tracking" in the Jupyter Notebook files, rather than the final commentary here. Without further ado, let's get started on reviewing the initial steps.
 
 ```python
 # First off, let's get started by importing the necessary libraries.
@@ -1098,7 +1098,7 @@ unique_counts
 </table>
 </div>
 
-Get rid of some of the columns that we definitely won't be using. The columns listed below in the drop() command had information that was not useful for anything other than the initial capturing. The exception being the Description column. I believe that this column could be used for some NLP, at some point. But, I wanted to focus on the remaining columns of data for this project.
+Get rid of some of the columns that we definitely won't be using. The columns listed below in the drop() command had information that was not useful for anything other than the initial capturing. The exception being the Description column. I believe that this column could be used for some NLP, if I ever revisit this data set. That said, I wanted to focus on the remaining columns of data, for this project's needs. After removing the columns, we're using the head() function to take a look at the columns, and make sure the columns list is what we want now.
 
 ```python
 gms2 = gms.copy()
@@ -1108,10 +1108,7 @@ gms2 = gms2.drop(['Game_ID',
                   'Developer', 
                   'Publisher', 
                   'Metacritic'], axis=1)
-```
-
-
-```python
+                  
 gms2.head(2)
 ```
 
@@ -1217,6 +1214,7 @@ gms2.head(2)
 
 
 ```python
+# Let's take a look at the numeric data type's averages, just to get some additional details.
 gms2.mean()
 ```
 
@@ -1239,10 +1237,9 @@ gms2.mean()
 
 ```python
 # Create separate data sets for different approaches
-# esrb = ESRB focus ONLY
+# esrb = ESRB focus ONLY (drop rows where no ESRBWhy data exists)
 # genre = Genre focus ONLY
-# devpub = developer and publisher focus
-# revs = review focus (remove entries without data in PCT_Pos_Rev)
+# devpub = developer and publisher focus (Drop rows with no publisher data)
 esrb = gms2.copy()
 esrb = esrb[esrb['ESRBWhy'].notna()]
 
@@ -1254,13 +1251,11 @@ devpub = devpub[devpub['Publisher_Primary'].notna()]
 
 ## ESRB Why EDA
 
+First up, let's take a look at the ESRB ratings, and why games get rated the way they do. To do that, we've dropped out all rows that did NOT have ESRBWhy data breakouts. Since we took a look at some of the averages from all of our data, let's take a look at the averages for only the games that have an ESRBWhy value available.
 
 ```python
 esrb.mean()
 ```
-
-
-
 
     PCT_Pos_Rev            81.897138
     Total_Rev           12680.105182
@@ -1271,9 +1266,7 @@ esrb.mean()
     Purchase_Options        1.707171
     dtype: float64
 
-
-
-Did you notice the unusually high Franchise_Count average from earlier, and that it still is present? This means that we're, probably, only seeing games that have lots of eyes on them, normally. This could mean that ESRB is obtained by games where the popularity hits a specific point, and the developer/publisher feels that it is necessary to get it?
+Did you notice the unusually high Franchise_Count average from earlier (on all the data), and that it is still present? This means that we're, probably, only seeing games that have lots of eyes on them, normally. This could mean that ESRB is obtained by games where the popularity hits a specific point, and the developer/publisher feels that it is necessary to get it?
 
 In a quick Google search, there is no actual enforcement that a game HAS to get ratings on their game, to be released. ESRB is simply a "professional" and respected means of obtaining a rating for content. The Franchise count of 10+, has a few stipulations in its calculations, that make this more acceptable.
     1. It's NOT counting values of Null
@@ -1286,19 +1279,11 @@ Chances are, if you're a gamer, you've heard of these titles before. I would wag
 esrb['Indie'].value_counts().plot.pie()
 ```
 
-
-
-
     <AxesSubplot:ylabel='Indie'>
-
-
-
 
 ![png](output_14_1.png)
 
-
 So, not a large amount, as expected. However, larger than I would have guessed! Let's dive into that some more...
-
 
 ```python
 # Let's take a look at the indie games that DO have an ESRB rating. See if we recognize any of them.
@@ -1306,9 +1291,6 @@ ind = esrb.copy()
 ind = ind.loc[ind['Indie'] == 'Y']
 ind['Title'].head(n=15)
 ```
-
-
-
 
     31        ARK: Survival Evolved
     58               Stardew Valley
@@ -1327,25 +1309,18 @@ ind['Title'].head(n=15)
     146                   Wreckfest
     Name: Title, dtype: object
 
+Okay, this is beginning to make more sense now. Apparently, the Genre tag of Indie, is very much open for interpretation! I know Rocket League is made by developer Psyonix. I would struggle to describe Psyonix as an indie developer. I suppose there needs to be a definition of what makes a developer an "Indie" developer, at this point.
 
+In Googling the topic, I found that there is not an "official" definition. However, the main focus is on monetary support by the developers, from a publisher of some sort. This would make sense for all of these games, really. They started out with a handfull of developers, and made a popular game. That can be said of all of these titles. Psyonix is now large, but their first game came out on the Playstation 3, several years ago. The predecessor to Rocket League (which was identical in concept, but different in execution) was titled... Ready for this?... Supersonic Acrobatic Rocket-Powered Battle-Cars.
 
-Okay, this is beginning to make more sense now. Apparently, the Genre tag of Indie, is very much open for interpretation! I know Rocket League is made by Psyonix. I would struggle to describe Psyonix as an indie developer. I suppose there needs to be a definition of what makes a developer an "Indie" developer, at this point.
-
-Alright, in Googling the topic, I found that there is not an "official" definition. However, the main focus is on monetary support by the developers, from a publisher of some sort. This would make sense for all of these games, really. They started out with a handfull of developers, and made a popular game. That can be said of all of these titles. Psyonix is now large, but their first game came out on the Playstation 3, several years ago. The predecessor to Rocket League (which was identical in concept, but different in execution) was titled... Ready for this?... Supersonic Acrobatic Rocket-Powered Battle-Cars.
-
-Despite the horrible older game's title, they revamped it, made it for a new era, and delivered the simpler-titled sequel, Rocket League, sometime in 2015. The game was a massive success, earning Psyonix a buyout from Epic Games, the studio that owns the popular game Fortnite. I'm guessing they haven't removed the genre tag, since Psyonix was "picked up" from Epic games, and was released as an Indie title in the monetary focused definition.
+Despite the horrible older game's title, they revamped it, made it for a new era, and delivered the simpler-titled sequel, Rocket League, sometime in 2015. The game was a massive success, earning Psyonix a buyout from Epic Games, the studio that owns the popular game Fortnite. I'm guessing they haven't removed the genre tag, since Psyonix was "picked up" from Epic games, and was released as an Indie title in the "monetarily-focused" definition.
 
 Alright, that's enough deep diving into this area. Moving on...
-
 Let's take a look at the average positive review percentage, based off of the ESRB ratings.
-
 
 ```python
 esrb.groupby('ESRB', as_index=False)['PCT_Pos_Rev'].mean()
 ```
-
-
-
 
 <div>
 <style scoped>
@@ -1409,19 +1384,13 @@ esrb.groupby('ESRB', as_index=False)['PCT_Pos_Rev'].mean()
 </table>
 </div>
 
-
-
-Nothing shocking here. The fluctuation here is minimal at best. Looks like Early Childhood (EC) ratings are all null in that column. This, kind of, makes sense. Steam is on PC. PC's, and the games you can play on them, are usually not available to kids who are that early into their development. Rating Pending (RP) seems a little odd though. I'm gonna guess that there are very few titles in any of the categories that average out to an exact integer, making the Adults Only (AO) value just as suspicious. Let's take a look.
-
+Nothing shocking here. The fluctuation here is minimal at best. Looks like Early Childhood (EC) ratings are all null in that column. This, kind of, makes sense. Steam is on PC. PC's, and the games you can play on them, are usually not available to kids who are that early into their development. I would imagine, most parents would not want to give a toddler a keyboard and mouse to learn with! Rating Pending (RP) seems a little odd though. I'm gonna guess that there are very few titles in any of the categories that average out to an exact integer, making the Adults Only (AO) value just as suspicious. Let's take a look.
 
 ```python
 adon = esrb.copy()
 adon = adon.loc[adon['ESRB'] == 'ao']
 adon[['ESRB','Title','PCT_Pos_Rev','Total_Rev']]
 ```
-
-
-
 
 <div>
 <style scoped>
@@ -1466,17 +1435,11 @@ adon[['ESRB','Title','PCT_Pos_Rev','Total_Rev']]
 </table>
 </div>
 
-
-
-
 ```python
 rpend = esrb.copy()
 rpend = rpend.loc[rpend['ESRB'] == 'rp']
 rpend[['ESRB','Title','PCT_Pos_Rev','Total_Rev']]
 ```
-
-
-
 
 <div>
 <style scoped>
@@ -1542,18 +1505,12 @@ rpend[['ESRB','Title','PCT_Pos_Rev','Total_Rev']]
 </table>
 </div>
 
-
-
 Exactly what I suspected. A bunch of games I've never heard of, and only 1 actual Review score for each. Lastly, let's take a look at the ESRBWhy categories, and see what common phrases pop up in the various ratings being given.
-
 
 ```python
 # let's first see how many titles are in each rating category.
 esrb['ESRB'].value_counts()
 ```
-
-
-
 
     t      1005
     m       701
@@ -1564,26 +1521,17 @@ esrb['ESRB'].value_counts()
     ec        1
     Name: ESRB, dtype: int64
 
-
-
-
 ```python
 # Breakout of the top 4 should be the focus, so let's break out the ESRB data by those 4 ratings specifically.
 options = ['t','m','e10','e'] 
 esrb4 = esrb.copy()
 esrb4 = esrb4.loc[esrb4['ESRB'].isin(options)]
-```
 
-
-```python
 # Now let's Remove all unnecessary columns
 esrb5 = esrb4.iloc[: , 6:26].copy()
 esrb5.drop('ESRBWhy',axis=1,inplace=True)
 esrb5.head(2)
 ```
-
-
-
 
 <div>
 <style scoped>
@@ -1673,17 +1621,11 @@ esrb5.head(2)
 </table>
 </div>
 
-
-
-
 ```python
 # Next, lets convert these values into binary 1's and 0's for easier aggregation later.
 for col in esrb5.iloc[: , 1:18]:
     esrb5[col] = esrb5[col].map({'Y': 1, 'N': 0})
-```
 
-
-```python
 # Verify that the conversion worked
 esrb5.info()
 ```
@@ -1715,14 +1657,9 @@ esrb5.info()
     dtypes: int64(17), object(2)
     memory usage: 390.9+ KB
     
-
-
 ```python
 esrb5.groupby('ESRB').mean().round(4)*100
 ```
-
-
-
 
 <div>
 <style scoped>
@@ -1866,12 +1803,9 @@ esrb5.groupby('ESRB').mean().round(4)*100
 </table>
 </div>
 
+In the data above, the numbers are averages for each of the times that a Yes appears, for the ESRBWhy column's breakout values. Not a surprise, that most games have violence of some sort, and the rest of the columns make sense as to why they might have higher or lower average counts that determine the ESRB rating. I think the more interesting keywords are Partial, Intense, and Strong. These 3 seemed to be tags that definitely lead to the Mature rating, more than the rest. The remaining words are actual descriptors, while the intensity of the descriptors is what actually seems to, more accurately, depict the rating. If the word Strong is used as a descriptor, it's around a 57% chance that the game is rated M.
 
-
-The data above, is the numbers above are averages for each of the times that a Yes appears, for the ESRBWhy column's breakout values. Not a surprise, that most games have violence of some sort, and the rest of the columns make sense as to why they might have higher or lower average counts that determine the ESRB rating. I think the more interesting keywords are Partial, Intense, and Strong. These 3 seemed to be tags that definitely lead to the Mature rating, more than the rest. The remaining words are actual descriptors, while the intensity of the descriptors is what actually seems to more accurately depict the rating. If the word Strong is used as a descriptor, it's around a 57% chance that the game is rated M.
-
-While we could go further down this rabbit hole, moving onto some other EDA seems more appropriate for now. Lets move on to looking at some other breakouts of the games, based off of ESRB ratings.
-
+While we could go further down this rabbit hole, moving onto some other EDA seems more appropriate to keep a good flow. Lets move on, and do some looking at other breakouts of the games, based off of ESRB ratings.
 
 ```python
 # What's the highest priced game(s) on the list, after removal of anything without an ESRBWhy value?
@@ -1925,9 +1859,7 @@ print('Game: ',esrb.loc[esrb['Price'].idxmax()])
     FinalReleaseDt                                                    3/7/2019
     Name: 85, dtype: object
     
-
-Fans of the game series "Devil May Cry," are probably wondering why the 5th game in the series is listed at this price. This is, most likely, a variation of the game that wound up being special in some way. Something like the "Collectors Edition" version of the game, or something along those lines. More than likely, this game has a singular entry somewhere, that is for the "vanilla" game, without the special edition. It is also possible that this game was the first Game_ID listed in a bundle of games, and was kept as the original game. This is an issue that would need fixing, if I had the time to do so.
-
+Fans of the game series "Devil May Cry," are probably wondering why the 5th game in the series is listed at this price. This is, most likely, a variation of the game that wound up being special in some way. Something like the "Collectors Edition" version of the game, or something along those lines. More than likely, this game has a singular entry somewhere, that is for the "vanilla" game, without the special edition. It is also possible that this game was the first Game_ID listed in a bundle of games, and was kept as the original game. This is an issue that would require cleanup, as the entry for this game may already be listed somewhere else, or we may have need to make a manual entry for it. For simplicities sake though, I'm going to leave it as is. Attempting to fix all of these issues that would arise in the data, would take way longer than this project's allotted time. Let's continue on with the EDA...
 
 ```python
 # Which Publishers have the most titles in the list?
@@ -1935,17 +1867,9 @@ plt.subplots(figsize=(15,7))
 esrb['Publisher_Primary'].value_counts().nlargest(30).plot.bar()
 ```
 
-
-
-
     <AxesSubplot:>
 
-
-
-
 ![png](output_32_1.png)
-
-
 
 ```python
 # Developers?
@@ -1953,19 +1877,11 @@ plt.subplots(figsize=(15,7))
 esrb['Developer_Primary'].value_counts().nlargest(30).plot.bar(color=['C4'])
 ```
 
-
-
-
     <AxesSubplot:>
-
-
-
 
 ![png](output_33_1.png)
 
-
-Square Enix seems to be a pretty heavy user of ESRB ratings. Let's take a look at them specifically. I know they are a developer/publisher of Final Fantasy series, as well as many other series of games. That said, let's focus on their Franchise column specifically.
-
+Square Enix seems to be a pretty heavy user of ESRB ratings. Let's take a look at them specifically. I know they are a developer/publisher of the Final Fantasy series, as well as many other series of games. That said, let's focus on their Franchise column specifically.
 
 ```python
 se = esrb.copy()
@@ -1974,21 +1890,13 @@ plt.subplots(figsize=(15,7))
 se['Franchise'].value_counts().nlargest(30).plot.bar(color=['C7'])
 ```
 
-
-
-
     <AxesSubplot:>
-
-
-
 
 ![png](output_35_1.png)
 
-
 Whew! I didn't know they had 17+ games in their FF series! Suppose there are several "extensions" of various entries in the series though. Tomb Raider Franchise also appears to be a popular series as well. Not sure if those are only the newer versions of Tomb Raider, or if they have a bunch of remakes of the old series from the playstation though.
 
-Alright, now that we've jumped in on ESRB, let's take a look at some of the other breakouts, and see what we can find.
-
+Alright, now that we've jumped in on ESRB, let's take a look at some of the other breakouts, and see what we can find. Next up is the Genre tags EDA.
 
 ```python
 genre.info()
@@ -2047,8 +1955,6 @@ genre.info()
     dtypes: float64(4), int64(3), object(38)
     memory usage: 5.4+ MB
     
-
-
 ```python
 # Let's investigate our data, and make sure we don't have any games that have
 # an "N" for ALL genre tags that we're interested in. Those could be items that
@@ -2057,9 +1963,6 @@ gen_f1 = genre.copy()
 gen_f1 = gen_f1.iloc[: , 25:39].copy()
 gen_f1.head()
 ```
-
-
-
 
 <div>
 <style scoped>
@@ -2185,17 +2088,11 @@ gen_f1.head()
 </table>
 </div>
 
-
-
-
 ```python
 # First check: see if anything is blank in the Genre column
 gen_f2 = gen_f1.copy().loc[gen_f1['Genre'] == '']
 gen_f2
 ```
-
-
-
 
 <div>
 <style scoped>
@@ -2236,24 +2133,17 @@ gen_f2
 </table>
 </div>
 
-
-
-
 ```python
-# Alright, zero results for the first check. let's check one more thing...
+# Alright, zero results for the first check. Let's check one more thing...
 # Second check: see if any rows have ALL N's for the Genre tag types.
 # first step here, is to convert the Y's and N's into 1's and 0's again.
 gen_f3 = gen_f1.copy()
 for col in gen_f3.iloc[: , 2:14]:
     gen_f3[col] = gen_f3[col].map({'Y': 1, 'N': 0})
-```
 
-
-```python
 # Verify that the loop worked
 gen_f3.info()
 ```
-
     <class 'pandas.core.frame.DataFrame'>
     RangeIndex: 15726 entries, 0 to 15725
     Data columns (total 14 columns):
@@ -2276,16 +2166,11 @@ gen_f3.info()
     dtypes: int64(12), object(2)
     memory usage: 1.7+ MB
     
-
-
 ```python
 # Next, we sum the binary values of the Y/N results. If the sum = 0, we have an issue.
 gen_f3['SumGenres'] = gen_f3.iloc[:, 2:14].sum(axis=1)
 gen_f3.loc[gen_f3['SumGenres'] == 0]
 ```
-
-
-
 
 <div>
 <style scoped>
@@ -2327,10 +2212,7 @@ gen_f3.loc[gen_f3['SumGenres'] == 0]
 </table>
 </div>
 
-
-
 Twice, we have proven that the Genre tags are, pretty much, always present in the game data from Steam. Now let's take a deeper dive into the results, and see what we can discover.
-
 
 ```python
 # What game Genre tags have the highest average Prices?
@@ -2338,7 +2220,6 @@ gen_pr1 = genre.copy()
 for col in gen_pr1.iloc[: , 27:39]:
     gen_pr = gen_pr1.loc[gen_pr1[col] == 'Y']
     print('$',gen_pr['Price'].mean().round(2),' --> ',col,sep='')
-
 ```
 
     $11.7 --> Action
@@ -2354,9 +2235,7 @@ for col in gen_pr1.iloc[: , 27:39]:
     $14.29 --> Sports
     $12.03 --> Strategy
     
-
 Above view is okay, but it's not great for comparing via visualizations. Let's spice it up, and turn it into a dataframe instead. Once we do that, we can actually view everything as a simple bar chart.
-
 
 ```python
 # create an empty dataframe with our two columns we want to use as x and y.
@@ -2376,19 +2255,11 @@ gen_pravg.sort_values(by='Avg Price',inplace=True)
 gen_pravg.plot.bar(x='Genre',y='Avg Price',rot=90,color=['C2'])
 ```
 
-
-
-
     <AxesSubplot:xlabel='Genre'>
-
-
-
 
 ![png](output_47_1.png)
 
-
-Nothing terribly exciting here, honestly. This tells me a little bit about the cost by genre, but not enough to warrant a strong connection that might be unexpected. Massive Multiplayer tag is probably combined heavily with the "Free to Play" tag, which is why it's at the price average of half of what a usual monthly payment to play the game is (~$15/month). The rest of the games don't seem to have enough of a price gap to warrant any noticeable Genre tag causing a deep change. Genre is another area that we could deep dive into, for several hours. For now, lets move on to the developer and publisher focused data sets.
-
+Nothing terribly exciting here, honestly. This tells me a little bit about the cost by genre, but not enough to warrant a strong connection that might be unexpected. Massive Multiplayer tag is probably combined heavily with the "Free to Play" tag, which is why it's at the price average of half of what a usual monthly payment to play subscription based games like that is (~$15/month). The rest of the games don't seem to have enough of a price gap to warrant any noticeable Genre tag causing a deep change. Genre is another area that we could deep dive into, for several hours. For now, lets move on to the developer and publisher focused data sets.
 
 ```python
 # Which developers/publishers have the most titles under their belts
@@ -2396,21 +2267,13 @@ plt.subplots(figsize=(15,7))
 devpub['Developer_Primary'].value_counts().nlargest(30).plot.bar(color=['C4'])
 ```
 
-
-
-
     <AxesSubplot:>
-
-
-
 
 ![png](output_49_1.png)
 
-
 Wow! Choice of Games, I had never even heard of. After going to their developer page on Steam, they have 116 games available! Choice of Games specializes in making text based games. This means they, probably, have a shorter turnaround time for the development process. None of their games are anything that I've heard of, which says a lot about the popularity of their game types. So, in reviewing these developers further, I'm going to guess that I will not have heard of most of the games they've made. Aside form Square Enix and KOEI TECMO, I don't recognize any of these developer studios. Looking at the Developer counts, may not wield us any useful insights, at this point, other than the idea that we don't know the developers of games as well as we should, maybe?
 
-After looking at a few of the ones I haven't heard of, it is clear that there may be some saturation of game developers who are specializing in less popular types of games still. The top 3 developers in this list, seemed to be making games with a "quick and dirty" approach. These developers churned out a bunch of "no-name" games that are not popular on Steam, all of which had low prices.
-
+After looking at a few of the ones I haven't heard of, it is clear that there may be some saturation of game developers who are specializing in less popular types of games still. The top 3 developers in this list, seemed to be making games with a "quick and dirty" approach. These developers churned out a bunch of "no-name" games that are not popular on Steam, all of which had low prices. 2 words, 1 bad stigma... Market Saturation.
 
 ```python
 # Lets take a look at publishers now instead.
@@ -2418,36 +2281,31 @@ plt.subplots(figsize=(15,7))
 devpub['Publisher_Primary'].value_counts().nlargest(30).plot.bar(color=['C3'])
 ```
 
-
-
-
     <AxesSubplot:>
-
-
-
 
 ![png](output_51_1.png)
 
-
-These Publishers are much more familiar to me, which says a lot about the game industry, sadly. Developer studios get far less promotion for their games than the Publishers do. Big Fish Games, in the number 1 spot here, was not a Publisher I'd heard of. Their games are still not popular titles that are mainstream, but their prices are higher than the odd developers we saw in the Developer focus. They are "the largest publisher of Hidden Object games," according to their About page on Steam. I did not know that "Hidden Object games" were a type of game even!
+These Publishers are much more familiar to me, which says a lot about the game industry, sadly. Developer studios get far less promotion for their games than the Publishers do. Big Fish Games, in the number 1 spot here, was not a Publisher I'd heard of. Their games are still not popular titles that are mainstream, but their prices are higher than the odd developers we saw in the Developer focus. They are "the largest publisher of Hidden Object games," according to their About page on Steam. I did not know that "Hidden Object games" was a type of game even!
 
 At any rate, we've got the top names in gaming all over this list. Ubisoft, Square Enix, THQ, Sega, Devolver, Bandai, and a slew of others. I thought that we'd see a few more big names here, but I'm gonna guess that the saturation of Developers is also plaguing the list of games from this viewpoint as well. If we had sales data, we could probably look at that, as a much bigger "tell" of which publishers and developers are truly mainstream. We may be able to discern the quality of a publisher or developer, based off of these factors though.
 
-For now, let's break away from EDA, and focus on the next subject here, where we can take a stab at finding correlations and then attempting to make some prediction models. First up, let's see if we can find any correlations in the data, that help predict the percentage of positive reviews (PCT_Pos_Rev).
-
+For now, let's break away from EDA, and focus on the next subject here, where we can take a stab at finding correlations and then attempting to make some prediction models. First up, let's see if we can find any correlations in the data that help predict the percentage of positive reviews (PCT_Pos_Rev).
 
 ```python
+# First thing's first, let's make a new dataframe for our data.
+# drop out anything that doesn't have a percentage value for reviews
+# turn the FinalReleaseDt into an actual datetime value.
 revs = gms2.copy()
 revs = revs[revs['PCT_Pos_Rev'].notna()]
 revs['FinalReleaseDt'] = pd.to_datetime(revs['FinalReleaseDt'])
-# Create a new column that contains (days since release date as DSRD)
+
+# Create a new column that contains days since release date (as DSRD)
+# This field makes it easier to look at the release date, if it winds up
+# having an actual effect on other fields.
 revs['DSRD'] = pd.Timestamp.now().floor('d') - revs['FinalReleaseDt']
 revs['DSRD'] = revs['DSRD'].astype('timedelta64[D]').astype(int)
 revs.head(3)
 ```
-
-
-
 
 <div>
 <style scoped>
@@ -2568,10 +2426,11 @@ revs.head(3)
 <p>3 rows × 46 columns</p>
 </div>
 
-
-
-
 ```python
+# Next, let's filter out stuff that can't (or should not be used to) help us with
+# predicting the percentage of positive reviews.
+# After that, let's turn all of the columns that have an "object" data type, into
+# binary values.
 revs = revs.drop(['ESRB',
                   'ESRBWhy',
                   'Developer_Primary',
@@ -2588,6 +2447,7 @@ for column in revs:
 
 
 ```python
+# Verify that the loop ran properly, and all of the Y/N columns are now 1/0.
 revs.info()
 ```
 
@@ -2637,30 +2497,23 @@ revs.info()
     dtypes: float64(4), int32(1), int64(33)
     memory usage: 1.2 MB
     
-
-
 ```python
-# sns.pairplot(revs)
-# sns.heatmap(df_new.corr())
+# Alright, next up, let's take a look at our correlations in a
+# heatmap plot from our seaborn library.
 plt.subplots(figsize=(25,20))
 sns.heatmap(revs.corr(), annot=True)
 ```
 
-
-
-
     <AxesSubplot:>
-
-
-
 
 ![png](output_56_1.png)
 
-
 As you can see, the column "PCT_Pos_Rev" does not correlate well with anything, really. The highest correlation point was for the Genre tag of Indie, which was still a very low correlation, sitting at .21. However, we're going to try and see if we can still manage to find some accuracy when using a linear regression prediction model. 
 
-
 ```python
+# Start off with a fresh new dataframe to work with.
+# drop out the Franchise counts, then split the data into
+# training and test sets (80-->20).
 revs2 = revs.copy()
 revs = revs.drop(['Franchise_Count'], axis=1)
 msk = np.random.rand(len(revs)) < .8
@@ -2714,9 +2567,9 @@ train.info()
     dtypes: float64(3), int32(1), int64(33)
     memory usage: 972.9 KB
     
-
-
 ```python
+# Select the columns we want to use for the model
+# Capture the values we're trying to predict as our y's.
 x_train = train.iloc[:,1:37]
 x_test = test.iloc[:,1:37]
 
@@ -2770,16 +2623,16 @@ x_train.info()
     dtypes: float64(2), int32(1), int64(33)
     memory usage: 947.0 KB
     
-
-
 ```python
+# Create our training model, fit it, then use it to predict on the test data.
 lm = linear_model.LinearRegression()
 model = lm.fit(x_train,y_train)
 predictions = lm.predict(x_test)
-```
 
-
-```python
+# Shove the results of the model's predictions into a dataframe.
+# Rename the prediction results column.
+# Create a new table that joins the actual values for test, back with the test data.
+# Then join the prediction results to that table, then create a delta column for the predictions.
 pred = pd.DataFrame(predictions)
 pred.columns = ['RevPredicted']
 revs3 = x_test.join(y_test)
@@ -2787,9 +2640,6 @@ revs3 = revs3.join(pred)
 revs3['Review_Diff'] = revs3['RevPredicted'] - revs3['PCT_Pos_Rev'] 
 revs3.head()
 ```
-
-
-
 
 <div>
 <style scoped>
@@ -2957,9 +2807,6 @@ revs3.head()
 </table>
 <p>5 rows × 39 columns</p>
 </div>
-
-
-
 
 ```python
 def GetModelInfo(ytest, predvals, predname, diffname, dafra):

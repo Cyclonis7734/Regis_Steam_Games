@@ -579,20 +579,7 @@ strP = 'Z:\One Drive Main Folder\OneDrive - Regis University\Regis\MSDS 696 - PR
 gms = pd.read_csv(strP + 'SteamData_W4_Cleaned.csv',encoding = "ISO-8859-1")
 gms.head()
 ```
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
 
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -744,7 +731,7 @@ gms.head()
   </tbody>
 </table>
 <p>5 rows × 51 columns</p>
-</div>
+
 
 ```python
 gms.info()
@@ -816,20 +803,6 @@ unique_counts = pd.DataFrame.from_records([(col, gms[col].nunique()) for col in 
 unique_counts
 ```
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -1096,7 +1069,6 @@ unique_counts
     </tr>
   </tbody>
 </table>
-</div>
 
 Get rid of some of the columns that we definitely won't be using. The columns listed below in the drop() command had information that was not useful for anything other than the initial capturing. The exception being the Description column. I believe that this column could be used for some NLP, if I ever revisit this data set. That said, I wanted to focus on the remaining columns of data, for this project's needs. After removing the columns, we're using the head() function to take a look at the columns, and make sure the columns list is what we want now.
 
@@ -1112,23 +1084,6 @@ gms2 = gms2.drop(['Game_ID',
 gms2.head(2)
 ```
 
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -1208,18 +1163,11 @@ gms2.head(2)
   </tbody>
 </table>
 <p>2 rows × 45 columns</p>
-</div>
-
-
-
 
 ```python
 # Let's take a look at the numeric data type's averages, just to get some additional details.
 gms2.mean()
 ```
-
-
-
 
     PCT_Pos_Rev           83.450849
     Total_Rev           9017.671610
@@ -1230,10 +1178,7 @@ gms2.mean()
     Purchase_Options       1.395523
     dtype: float64
 
-
-
 ## Separate the Data for EDA
-
 
 ```python
 # Create separate data sets for different approaches
@@ -1279,8 +1224,6 @@ Chances are, if you're a gamer, you've heard of these titles before. I would wag
 esrb['Indie'].value_counts().plot.pie()
 ```
 
-    <AxesSubplot:ylabel='Indie'>
-
 ![png](output_14_1.png)
 
 So, not a large amount, as expected. However, larger than I would have guessed! Let's dive into that some more...
@@ -1322,20 +1265,6 @@ Let's take a look at the average positive review percentage, based off of the ES
 esrb.groupby('ESRB', as_index=False)['PCT_Pos_Rev'].mean()
 ```
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -1382,7 +1311,6 @@ esrb.groupby('ESRB', as_index=False)['PCT_Pos_Rev'].mean()
     </tr>
   </tbody>
 </table>
-</div>
 
 Nothing shocking here. The fluctuation here is minimal at best. Looks like Early Childhood (EC) ratings are all null in that column. This, kind of, makes sense. Steam is on PC. PC's, and the games you can play on them, are usually not available to kids who are that early into their development. I would imagine, most parents would not want to give a toddler a keyboard and mouse to learn with! Rating Pending (RP) seems a little odd though. I'm gonna guess that there are very few titles in any of the categories that average out to an exact integer, making the Adults Only (AO) value just as suspicious. Let's take a look.
 
@@ -1392,20 +1320,6 @@ adon = adon.loc[adon['ESRB'] == 'ao']
 adon[['ESRB','Title','PCT_Pos_Rev','Total_Rev']]
 ```
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -1433,7 +1347,6 @@ adon[['ESRB','Title','PCT_Pos_Rev','Total_Rev']]
     </tr>
   </tbody>
 </table>
-</div>
 
 ```python
 rpend = esrb.copy()
@@ -1441,20 +1354,6 @@ rpend = rpend.loc[rpend['ESRB'] == 'rp']
 rpend[['ESRB','Title','PCT_Pos_Rev','Total_Rev']]
 ```
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -1503,7 +1402,6 @@ rpend[['ESRB','Title','PCT_Pos_Rev','Total_Rev']]
     </tr>
   </tbody>
 </table>
-</div>
 
 Exactly what I suspected. A bunch of games I've never heard of, and only 1 actual Review score for each. Lastly, let's take a look at the ESRBWhy categories, and see what common phrases pop up in the various ratings being given.
 
@@ -1533,20 +1431,6 @@ esrb5.drop('ESRBWhy',axis=1,inplace=True)
 esrb5.head(2)
 ```
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -1619,7 +1503,6 @@ esrb5.head(2)
     </tr>
   </tbody>
 </table>
-</div>
 
 ```python
 # Next, lets convert these values into binary 1's and 0's for easier aggregation later.
@@ -1661,20 +1544,6 @@ esrb5.info()
 esrb5.groupby('ESRB').mean().round(4)*100
 ```
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -1801,7 +1670,6 @@ esrb5.groupby('ESRB').mean().round(4)*100
     </tr>
   </tbody>
 </table>
-</div>
 
 In the data above, the numbers are averages for each of the times that a Yes appears, for the ESRBWhy column's breakout values. Not a surprise, that most games have violence of some sort, and the rest of the columns make sense as to why they might have higher or lower average counts that determine the ESRB rating. I think the more interesting keywords are Partial, Intense, and Strong. These 3 seemed to be tags that definitely lead to the Mature rating, more than the rest. The remaining words are actual descriptors, while the intensity of the descriptors is what actually seems to, more accurately, depict the rating. If the word Strong is used as a descriptor, it's around a 57% chance that the game is rated M.
 
@@ -1867,8 +1735,6 @@ plt.subplots(figsize=(15,7))
 esrb['Publisher_Primary'].value_counts().nlargest(30).plot.bar()
 ```
 
-    <AxesSubplot:>
-
 ![png](output_32_1.png)
 
 ```python
@@ -1876,8 +1742,6 @@ esrb['Publisher_Primary'].value_counts().nlargest(30).plot.bar()
 plt.subplots(figsize=(15,7))
 esrb['Developer_Primary'].value_counts().nlargest(30).plot.bar(color=['C4'])
 ```
-
-    <AxesSubplot:>
 
 ![png](output_33_1.png)
 
@@ -1889,8 +1753,6 @@ se = se.loc[se['Publisher_Primary'] == 'Square Enix']
 plt.subplots(figsize=(15,7))
 se['Franchise'].value_counts().nlargest(30).plot.bar(color=['C7'])
 ```
-
-    <AxesSubplot:>
 
 ![png](output_35_1.png)
 
@@ -1964,20 +1826,6 @@ gen_f1 = gen_f1.iloc[: , 25:39].copy()
 gen_f1.head()
 ```
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -2086,7 +1934,6 @@ gen_f1.head()
     </tr>
   </tbody>
 </table>
-</div>
 
 ```python
 # First check: see if anything is blank in the Genre column
@@ -2094,20 +1941,6 @@ gen_f2 = gen_f1.copy().loc[gen_f1['Genre'] == '']
 gen_f2
 ```
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -2131,7 +1964,6 @@ gen_f2
   <tbody>
   </tbody>
 </table>
-</div>
 
 ```python
 # Alright, zero results for the first check. Let's check one more thing...
@@ -2172,20 +2004,6 @@ gen_f3['SumGenres'] = gen_f3.iloc[:, 2:14].sum(axis=1)
 gen_f3.loc[gen_f3['SumGenres'] == 0]
 ```
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -2210,7 +2028,6 @@ gen_f3.loc[gen_f3['SumGenres'] == 0]
   <tbody>
   </tbody>
 </table>
-</div>
 
 Twice, we have proven that the Genre tags are, pretty much, always present in the game data from Steam. Now let's take a deeper dive into the results, and see what we can discover.
 
@@ -2248,14 +2065,11 @@ for col in gen_pr1.iloc[: , 27:39]:
     gen_pravg.loc[len(gen_pravg)] = [col,gen_pr['Price'].mean().round(2)]
 ```
 
-
 ```python
 # Now sort them, and push into a quick bar chart visualization.
 gen_pravg.sort_values(by='Avg Price',inplace=True)
 gen_pravg.plot.bar(x='Genre',y='Avg Price',rot=90,color=['C2'])
 ```
-
-    <AxesSubplot:xlabel='Genre'>
 
 ![png](output_47_1.png)
 
@@ -2266,8 +2080,6 @@ Nothing terribly exciting here, honestly. This tells me a little bit about the c
 plt.subplots(figsize=(15,7))
 devpub['Developer_Primary'].value_counts().nlargest(30).plot.bar(color=['C4'])
 ```
-
-    <AxesSubplot:>
 
 ![png](output_49_1.png)
 
@@ -2280,8 +2092,6 @@ After looking at a few of the ones I haven't heard of, it is clear that there ma
 plt.subplots(figsize=(15,7))
 devpub['Publisher_Primary'].value_counts().nlargest(30).plot.bar(color=['C3'])
 ```
-
-    <AxesSubplot:>
 
 ![png](output_51_1.png)
 
@@ -2319,20 +2129,6 @@ revs['DSRD'] = revs['DSRD'].astype('timedelta64[D]').astype(int)
 revs.head(3)
 ```
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -2436,7 +2232,6 @@ revs.head(3)
   </tbody>
 </table>
 <p>3 rows × 46 columns</p>
-</div>
 
 ```python
 # Next, let's filter out stuff that can't (or should not be used to) help us with
@@ -2515,8 +2310,6 @@ revs.info()
 plt.subplots(figsize=(25,20))
 sns.heatmap(revs.corr(), annot=True)
 ```
-
-    <AxesSubplot:>
 
 ![png](output_56_1.png)
 
@@ -2653,20 +2446,6 @@ revs3['Review_Diff'] = revs3['RevPredicted'] - revs3['PCT_Pos_Rev']
 revs3.head()
 ```
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -2818,7 +2597,6 @@ revs3.head()
   </tbody>
 </table>
 <p>5 rows × 39 columns</p>
-</div>
 
 While a table can tell us a fair amount about the model's accuracy, let's deck it out and make a visualization as well. To do that, we can take a look at the delta, mapped against a value of 0. This will give us a decent view of the difference between the predictions and actual values. Since we're also going to take a look at a price prediction model later, let's turn this code into a function, so we can use it later on!
 
@@ -2842,7 +2620,6 @@ def GetModelInfo(ytest, predvals, predname, diffname, dafra):
 
     plt.plot(X_plot, Y_plot, color='r')
 ```
-
 
 ```python
 GetModelInfo(y_test,pred,'RevPredicted','Review_Diff',revs3)
@@ -2892,8 +2669,6 @@ for column in prc:
 prc['Franchise_Count'].value_counts().plot.bar()
 ```
 
-    <AxesSubplot:>
-
 ![png](output_65_1.png)
 
 ```python
@@ -2926,8 +2701,6 @@ prc['Franchise_Count'].head(5)
 ```python
 prc['Franchise_Count'].value_counts().plot.bar()
 ```
-
-    <AxesSubplot:>
 
 ![png](output_68_1.png)
 
@@ -2987,8 +2760,6 @@ plt.subplots(figsize=(25,20))
 sns.heatmap(prc.corr(), annot=True)
 ```
 
-    <AxesSubplot:>
-
 ![png](output_71_1.png)
 
 Welp, not so good correlation for the Price column either. At least for this column, we have a stronger correlation based off of a few of the ESRB values. I would wager that this is occurring because the companies that are actually popular enough to feel it necessary to obtain the ESRB ratings, generally have a popular product. Popular product equals more expensive product in this sense as well. At any rate, let's see what a linear model can get for us, with this data. The next steps are pretty much the same as the previous linear model's creation, so there's no notes this time, just code.
@@ -3000,20 +2771,6 @@ prc.insert(0, 'Price', prc_col)
 prc.head()
 ```
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -3165,7 +2922,6 @@ prc.head()
   </tbody>
 </table>
 <p>5 rows × 36 columns</p>
-</div>
 
 ```python
 msk = np.random.rand(len(prc)) < .8
@@ -3284,20 +3040,6 @@ prc2['Price_Diff'] = prc2['PricePredicted'] - prc2['Price']
 prc2.head()
 ```
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -3449,7 +3191,6 @@ prc2.head()
   </tbody>
 </table>
 <p>5 rows × 38 columns</p>
-</div>
 
 ```python
 GetModelInfo(y_test,pred,'PricePredicted','Price_Diff',prc2)

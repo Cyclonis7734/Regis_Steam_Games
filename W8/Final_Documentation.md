@@ -2508,7 +2508,7 @@ sns.heatmap(revs.corr(), annot=True)
 
 ![png](output_56_1.png)
 
-As you can see, the column "PCT_Pos_Rev" does not correlate well with anything, really. The highest correlation point was for the Genre tag of Indie, which was still a very low correlation, sitting at .21. However, we're going to try and see if we can still manage to find some accuracy when using a linear regression prediction model. 
+As you can see, the column "PCT_Pos_Rev" does not correlate well with anything, really. The highest correlation points were for Massive Multiplayer with -.26 and the Genre tag of Indie at .21. However, we're going to try and see if we can still manage to find some accuracy when using a linear regression prediction model. 
 
 ```python
 # Start off with a fresh new dataframe to work with.
@@ -2808,6 +2808,10 @@ revs3.head()
 <p>5 rows × 39 columns</p>
 </div>
 
+While a table can tell us a fair amount about the model's accuracy, let's deck it out and make a visualization as well. To do that, we can take a look at the delta, mapped against a value of 0. This will give us a decent view of the difference between the predictions and actual values. Since we're also going to take a look at a price prediction model later, let's turn this code into a function, so we can use it later on!
+
+Below, we'll start out by printing out the model's MSE and r-squared values, to get an immediate gauge on accuracy. After that, we begin building our plots by pulling in the 2 columns that we're comparing (actual vs. predicted). Next is setting up various plot formatting options, in particular the size of the chart, and the x/y limits. After that, we establish the scatterplot as an object, then create a red line across the 0 marker on the chart for easy visualizing.
+
 ```python
 def GetModelInfo(ytest, predvals, predname, diffname, dafra):
     print(f'Mean squared error (closer to 0 is better): {mean_squared_error(ytest, predvals)}')
@@ -2831,24 +2835,28 @@ def GetModelInfo(ytest, predvals, predname, diffname, dafra):
 ```python
 GetModelInfo(y_test,pred,'RevPredicted','Review_Diff',revs3)
 ```
-
     Mean squared error (closer to 0 is better): 140.65011113112897
     r2 score (1 is perfect): 0.03882954016692275
-    
-
 
 ![png](output_63_1.png)
 
-
+Nothing shocking here, again. With such a low correlation on anything, the model's accuracy was a bust. A measily .03 r2 value, with a whopping 140 MSE. Maybe we'll have some better luck with price estimations for a game...
 
 ```python
+# Start off with a clean copy of the data
+# Setup the days since release date column again.
 prc = gms2.copy()
-
 prc['FinalReleaseDt'] = pd.to_datetime(prc['FinalReleaseDt'])
 # Create the days since release date column again (DSRD)
 prc['DSRD'] = pd.Timestamp.now().floor('d') - prc['FinalReleaseDt']
 prc['DSRD'] = prc['DSRD'].astype('timedelta64[D]').astype(int)
 
+# Drop out columns which can't, or should not, be used for price prediction.
+# The developer and publisher were removed, so as to not create an unnecessary amount of work
+# to control them as categories. If anything, I would have preferred to capture stats about each
+# dev/pub, and use that as a new column. Turning them into integer values would work also, as a
+# means to distinguish between them. However, I felt that the franchise count values would be enough
+# of a distinguisher for now.
 prc = prc.drop(['PCT_Pos_Rev',
                 'Total_Rev',
                 'ESRB',
@@ -2860,34 +2868,25 @@ prc = prc.drop(['PCT_Pos_Rev',
                 'Genre',
                 'FinalReleaseDt'], axis=1)
 
+# Format the Y/N columns into binary 1/0 values instead.
 for column in prc:
     if prc[column].dtype == object:
         prc[column] = prc[column].map({'Y': 1, 'N': 0})
 ```
 
-
 ```python
+# In reviewing the results of the changes made above, I found that the Franchise
+# counts were not being displayed properly for some reason. Further investigation below...
 prc['Franchise_Count'].value_counts().plot.bar()
 ```
 
-
-
-
     <AxesSubplot:>
 
-
-
-
 ![png](output_65_1.png)
-
-
 
 ```python
 prc['Franchise_Count'].head(5)
 ```
-
-
-
 
     0    9.0
     1    NaN
@@ -2896,17 +2895,14 @@ prc['Franchise_Count'].head(5)
     4    4.0
     Name: Franchise_Count, dtype: float64
 
-
-
-
 ```python
+# Aha! Let's get those NaN values out of there. 
+# First declare what to fill them with, then use the fillna function to change them to 0's.
+# After that, let's see how it turned out.
 values = {'Franchise_Count': 0}
 prc = prc.fillna(value=values)
 prc['Franchise_Count'].head(5)
 ```
-
-
-
 
     0    9.0
     1    0.0
@@ -2915,26 +2911,16 @@ prc['Franchise_Count'].head(5)
     4    4.0
     Name: Franchise_Count, dtype: float64
 
-
-
-
 ```python
 prc['Franchise_Count'].value_counts().plot.bar()
 ```
 
-
-
-
     <AxesSubplot:>
-
-
-
 
 ![png](output_68_1.png)
 
-
-
 ```python
+# Results look like they're supposed to now! Mostly 0 franchise values. Now let's review the data again...
 prc.info()
 ```
 
@@ -2982,25 +2968,16 @@ prc.info()
     dtypes: float64(2), int32(1), int64(33)
     memory usage: 4.3 MB
     
-
-There we go. Nice clean data set of 15.7k rows. Now, let's see if we can find any correlations.
-
+There we go. Nice clean data set of 15.7k rows. Now, let's see if we can find any correlations for these columns...
 
 ```python
 plt.subplots(figsize=(25,20))
 sns.heatmap(prc.corr(), annot=True)
 ```
 
-
-
-
     <AxesSubplot:>
 
-
-
-
 ![png](output_71_1.png)
-
 
 Welp, not so good correlation for the Price column either. At least for this column, we have a stronger correlation based off of a few of the ESRB values. I would wager that this is occurring because the companies that are actually popular enough to feel it necessary to obtain the ESRB ratings, generally have a popular product. Popular product equals more expensive product in this sense as well. At any rate, let's see what a linear model can get for us, with this data.
 
